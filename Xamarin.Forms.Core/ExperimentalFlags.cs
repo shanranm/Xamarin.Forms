@@ -10,6 +10,7 @@ namespace Xamarin.Forms
 	internal static class ExperimentalFlags
 	{
 		internal const string CollectionViewExperimental = "CollectionView_Experimental";
+		internal const string IndicatorViewExperimental = "IndicatorView_Experimental";
 		internal const string ShellUWPExperimental = "Shell_UWP_Experimental";
 
 		[EditorBrowsable(EditorBrowsableState.Never)]
