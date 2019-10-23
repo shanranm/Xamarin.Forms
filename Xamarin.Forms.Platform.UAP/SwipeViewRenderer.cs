@@ -12,11 +12,11 @@ namespace Xamarin.Forms.Platform.UWP
 {
     public class SwipeViewRenderer : ViewRenderer<SwipeView, WSwipeControl>
     {
-        private bool _isDisposed;
-        private Dictionary<WSwipeItem, SwipeItem> _leftItems;
-        private Dictionary<WSwipeItem, SwipeItem> _rightItems;
-        private Dictionary<WSwipeItem, SwipeItem> _topItems;
-        private Dictionary<WSwipeItem, SwipeItem> _bottomItems;
+        bool _isDisposed;
+        Dictionary<WSwipeItem, SwipeItem> _leftItems;
+        Dictionary<WSwipeItem, SwipeItem> _rightItems;
+        Dictionary<WSwipeItem, SwipeItem> _topItems;
+        Dictionary<WSwipeItem, SwipeItem> _bottomItems;
 
         public SwipeViewRenderer()
         {
@@ -105,36 +105,41 @@ namespace Xamarin.Forms.Platform.UWP
 
  		protected override Windows.Foundation.Size MeasureOverride(Windows.Foundation.Size availableSize)
 		{
-			if (Element == null || availableSize.Width * availableSize.Height == 0)
-				return new Windows.Foundation.Size(0, 0);
-
-			Element.IsInNativeLayout = true;
-				
-			double width = Math.Max(0, Element.Width);
-			double height = Math.Max(0, Element.Height);
-			var result = new Windows.Foundation.Size(width, height);
-
-			if (Control != null)
+			if (Control.Parent != null)
+				return base.MeasureOverride(availableSize);
+			else
 			{
-				double w = Element.Width;
-				double h = Element.Height;
+				if (Element == null || availableSize.Width * availableSize.Height == 0)
+					return new Windows.Foundation.Size(0, 0);
 
-				if (w == -1)
-					w = availableSize.Width;
+				Element.IsInNativeLayout = true;
 
-				if (h == -1)
-					h = availableSize.Height;
+				double width = Math.Max(0, Element.Width);
+				double height = Math.Max(0, Element.Height);
+				var result = new Windows.Foundation.Size(width, height);
 
-				w = Math.Max(0, w);
-				h = Math.Max(0, h);
+				if (Control != null)
+				{
+					double w = Element.Width;
+					double h = Element.Height;
 
-				// SwipeLayout sometimes crashes when Measure if not previously fully loaded into the VisualTree.
-				Control.Loaded += (sender, args) => { Control.Measure(new Windows.Foundation.Size(w, h)); };
+					if (w == -1)
+						w = availableSize.Width;
+
+					if (h == -1)
+						h = availableSize.Height;
+
+					w = Math.Max(0, w);
+					h = Math.Max(0, h);
+
+					// SwipeLayout sometimes crashes when Measure if not previously fully loaded into the VisualTree.
+					Control.Loaded += (sender, args) => { Control.Measure(new Windows.Foundation.Size(w, h)); };
+				}
+
+				Element.IsInNativeLayout = false;
+
+				return result;
 			}
-
-			Element.IsInNativeLayout = false;
-
-			return result;
 		}
 
 		void OnSwipeItemsPropertyChanged(object sender, PropertyChangedEventArgs e)
