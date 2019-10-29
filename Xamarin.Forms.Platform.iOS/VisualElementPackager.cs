@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Xamarin.Forms.Internals;
 
 #if __MOBILE__
@@ -141,6 +142,7 @@ namespace Xamarin.Forms.Platform.MacOS
 
 		void OrderElement(VisualElement element, int order)
 		{
+			Performance.Start(out string reference);
 			if (CompressedLayout.GetIsHeadless(element))
 				return;
 
@@ -154,13 +156,17 @@ namespace Xamarin.Forms.Platform.MacOS
 			Renderer.NativeView.BringSubviewToFront(nativeControl);
 #endif
 			nativeControl.Layer.ZPosition = order * 1000;
+			Performance.Stop(reference);
 		}
 
 		void OnChildAdded(object sender, ElementEventArgs e)
 		{
 			var view = e.Element as VisualElement;
 			if (view != null)
+			{
 				OnChildAdded(view);
+				OrderElement(view, ElementController.LogicalChildren.IndexOf(view));
+			}
 		}
 
 		void OnChildRemoved(object sender, ElementEventArgs e)
