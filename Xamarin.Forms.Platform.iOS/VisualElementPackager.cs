@@ -47,20 +47,7 @@ namespace Xamarin.Forms.Platform.MacOS
 				if (child != null)
 				{
 					OnChildAdded(child);
-
-					if (!CompressedLayout.GetIsHeadless(child))
-					{
-						var childRenderer = Platform.GetRenderer(child);
-
-						if (childRenderer == null)
-							continue;
-
-						var nativeControl = childRenderer.NativeView;
-#if __MOBILE__
-						Renderer.NativeView.BringSubviewToFront(nativeControl);
-#endif
-						nativeControl.Layer.ZPosition = i * 1000;
-					}
+					OrderElement(child, i);
 				}
 			}
 		}
@@ -148,17 +135,25 @@ namespace Xamarin.Forms.Platform.MacOS
 				var child = ElementController.LogicalChildren[z] as VisualElement;
 				if (child == null)
 					continue;
-				var childRenderer = Platform.GetRenderer(child);
-
-				if (childRenderer == null)
-					continue;
-
-				var nativeControl = childRenderer.NativeView;
-#if __MOBILE__
-				Renderer.NativeView.BringSubviewToFront(nativeControl);
-#endif
-				nativeControl.Layer.ZPosition = z * 1000;
+				OrderElement(child, z);
 			}
+		}
+
+		void OrderElement(VisualElement element, int order)
+		{
+			if (CompressedLayout.GetIsHeadless(element))
+				return;
+
+			var childRenderer = Platform.GetRenderer(element);
+
+			if (childRenderer == null)
+				return;
+
+			var nativeControl = childRenderer.NativeView;
+#if __MOBILE__
+			Renderer.NativeView.BringSubviewToFront(nativeControl);
+#endif
+			nativeControl.Layer.ZPosition = order * 1000;
 		}
 
 		void OnChildAdded(object sender, ElementEventArgs e)
