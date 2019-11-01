@@ -94,7 +94,7 @@ namespace Xamarin.Forms.Platform.MacOS
 			Performance.Start(out string reference);
 			if (CompressedLayout.GetIsHeadless(view))
 			{
-				var packager = new VisualElementPackager(Renderer, view, isHeadless:true);
+				var packager = new VisualElementPackager(Renderer, view, isHeadless: true);
 				view.IsPlatformEnabled = true;
 				packager.Load();
 			}
@@ -126,12 +126,16 @@ namespace Xamarin.Forms.Platform.MacOS
 			viewRenderer.Dispose();
 		}
 
-		void EnsureChildrenOrder()
+		void EnsureChildrenOrder(VisualElement element = null)
 		{
 			if (ElementController.LogicalChildren.Count == 0)
 				return;
 
-			for (var z = 0; z < ElementController.LogicalChildren.Count; z++)
+			var effectedChildIndex = 0;
+			if (element != null)
+				effectedChildIndex = ElementController.LogicalChildren.IndexOf(element);
+
+			for (var z = effectedChildIndex; z < ElementController.LogicalChildren.Count; z++)
 			{
 				var child = ElementController.LogicalChildren[z] as VisualElement;
 				if (child == null)
@@ -165,7 +169,7 @@ namespace Xamarin.Forms.Platform.MacOS
 			if (view != null)
 			{
 				OnChildAdded(view);
-				OrderElement(view, ElementController.LogicalChildren.IndexOf(view));
+				EnsureChildrenOrder(view);
 			}
 		}
 
