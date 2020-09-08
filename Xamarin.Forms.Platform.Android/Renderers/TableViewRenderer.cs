@@ -4,7 +4,7 @@ using Android.Views;
 using AView = Android.Views.View;
 using AListView = Android.Widget.ListView;
 using System.ComponentModel;
-using Android.Support.V4.Widget;
+using AndroidX.Core.Widget;
 
 namespace Xamarin.Forms.Platform.Android
 {

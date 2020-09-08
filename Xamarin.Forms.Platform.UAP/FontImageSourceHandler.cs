@@ -6,6 +6,7 @@ using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
+using WFontIconSource = Microsoft.UI.Xaml.Controls.FontIconSource;
 
 namespace Xamarin.Forms.Platform.UWP
 {
@@ -24,7 +25,7 @@ namespace Xamarin.Forms.Platform.UWP
 
 			var textFormat = new CanvasTextFormat
 			{
-				FontFamily = fontsource.FontFamily,
+				FontFamily = fontsource.FontFamily.ToFontFamily().Source,
 				FontSize = (float)fontsource.Size,
 				HorizontalAlignment = CanvasHorizontalAlignment.Center,
 				VerticalAlignment = CanvasVerticalAlignment.Center,
@@ -51,6 +52,28 @@ namespace Xamarin.Forms.Platform.UWP
 			}
 		}
 
+		public Task<Microsoft.UI.Xaml.Controls.IconSource> LoadIconSourceAsync(ImageSource imagesource, CancellationToken cancellationToken = default(CancellationToken))
+		{
+			Microsoft.UI.Xaml.Controls.IconSource image = null;
+
+			if (imagesource is FontImageSource fontImageSource)
+			{
+				image = new WFontIconSource
+				{
+					Glyph = fontImageSource.Glyph,
+					FontSize = fontImageSource.Size,
+					Foreground = fontImageSource.Color.ToBrush()
+				};
+
+				var uwpFontFamily = fontImageSource.FontFamily.ToFontFamily().Source;
+
+				if (!string.IsNullOrEmpty(uwpFontFamily))
+					((WFontIconSource)image).FontFamily = new FontFamily(uwpFontFamily);
+			}
+
+			return Task.FromResult(image);
+		}
+
 		public Task<IconElement> LoadIconElementAsync(ImageSource imagesource, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			IconElement image = null;
@@ -60,10 +83,14 @@ namespace Xamarin.Forms.Platform.UWP
 				image = new FontIcon
 				{
 					Glyph = fontImageSource.Glyph,
-					FontFamily = new FontFamily(fontImageSource.FontFamily),
 					FontSize = fontImageSource.Size,
 					Foreground = fontImageSource.Color.ToBrush()
 				};
+
+				var uwpFontFamily = fontImageSource.FontFamily.ToFontFamily().Source;
+
+				if (!string.IsNullOrEmpty(uwpFontFamily))
+					((FontIcon)image).FontFamily = new FontFamily(uwpFontFamily);
 			}
 
 			return Task.FromResult(image);

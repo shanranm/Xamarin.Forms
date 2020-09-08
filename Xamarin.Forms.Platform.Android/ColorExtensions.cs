@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel;
 using Android.Content;
 using Android.Content.Res;
-using Android.Support.V4.Content;
+using AndroidX.Core.Content;
 using AColor = Android.Graphics.Color;
 
 namespace Xamarin.Forms.Platform.Android

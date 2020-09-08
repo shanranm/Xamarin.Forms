@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using Android.OS;
-using Android.Support.V4.App;
+using AndroidX.Fragment.App;
 using Java.Lang;
 using Xamarin.Forms.Internals;
 using FragmentTransit = Android.App.FragmentTransit;
@@ -14,7 +14,7 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 		List<Fragment> _fragments;
 		bool _disposed;
 
-		public FormsFragmentPagerAdapter(MultiPage<T> page, FragmentManager fragmentManager) : base(fragmentManager)
+		public FormsFragmentPagerAdapter(MultiPage<T> page, FragmentManager fragmentManager) : base(fragmentManager, FragmentStatePagerAdapter.BehaviorResumeOnlyCurrentFragment)
 		{
 			_page = page;
 			_fragmentManager = fragmentManager;

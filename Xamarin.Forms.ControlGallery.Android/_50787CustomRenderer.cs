@@ -3,8 +3,7 @@ using Android.Content;
 using Xamarin.Forms;
 using Xamarin.Forms.ControlGallery.Android;
 using Xamarin.Forms.Platform.Android.AppCompat;
-using FragmentTransaction = Android.Support.V4.App.FragmentTransaction;
-
+using FragmentTransaction = AndroidX.Fragment.App.FragmentTransaction;
 [assembly: ExportRenderer(typeof(NavigationPage), typeof(_50787CustomRenderer))]
 namespace Xamarin.Forms.ControlGallery.Android
 {

@@ -5,7 +5,7 @@ using Android.Runtime;
 using Android.Views;
 using Xamarin.Forms.PlatformConfiguration.AndroidSpecific.AppCompat;
 using AView = Android.Views.View;
-using Fragment = Android.Support.V4.App.Fragment;
+using AndroidX.Fragment.App;
 
 namespace Xamarin.Forms.Platform.Android.AppCompat
 {
@@ -16,6 +16,7 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 		Action<PageContainer> _onCreateCallback;
 		PageContainer _pageContainer;
 		IVisualElementRenderer _visualElementRenderer;
+		bool _isVisible = false;
 
 		public FragmentContainer()
 		{
@@ -109,6 +110,8 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 
 		public override void OnPause()
 		{
+			_isVisible = false;
+
 			bool shouldSendEvent = Application.Current.OnThisPlatform().GetSendDisappearingEventOnPause();
 			if (shouldSendEvent)
 				SendLifecycleEvent(false);
@@ -118,6 +121,8 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 
 		public override void OnResume()
 		{
+			_isVisible = true;
+
 			bool shouldSendEvent = Application.Current.OnThisPlatform().GetSendAppearingEventOnResume();
 			if (shouldSendEvent)
 				SendLifecycleEvent(true);
@@ -134,7 +139,7 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 			if(!(currentPage == null || currentPage == PageController))
 				return;
 
-			if (isAppearing && UserVisibleHint)
+			if (isAppearing && _isVisible)
 				PageController?.SendAppearing();
 			else if(!isAppearing)
 				PageController?.SendDisappearing();

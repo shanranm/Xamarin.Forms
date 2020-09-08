@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using Android.Support.V7.Widget;
+using AndroidX.RecyclerView.Widget;
 
 namespace Xamarin.Forms.Platform.Android
 {
@@ -16,8 +16,10 @@ namespace Xamarin.Forms.Platform.Android
 
 			switch (itemsSource)
 			{
-				case IList _ when itemsSource is INotifyCollectionChanged:
-					return new ObservableItemsSource(itemsSource as IList, notifier);
+				case IList list when itemsSource is INotifyCollectionChanged:
+					return new ObservableItemsSource(new MarshalingObservableCollection(list), notifier);
+				case IEnumerable _ when itemsSource is INotifyCollectionChanged:
+					return new ObservableItemsSource(itemsSource as IEnumerable, notifier);
 				case IEnumerable<object> generic:
 					return new ListSource(generic);
 			}
@@ -37,7 +39,9 @@ namespace Xamarin.Forms.Platform.Android
 
 		public static IGroupableItemsViewSource Create(GroupableItemsView itemsView, RecyclerView.Adapter adapter)
 		{
-			if (itemsView.IsGrouped)
+			var source = itemsView.ItemsSource;
+
+			if (itemsView.IsGrouped && source != null)
 			{
 				return new ObservableGroupedSource(itemsView, new AdapterNotifier(adapter));
 			}

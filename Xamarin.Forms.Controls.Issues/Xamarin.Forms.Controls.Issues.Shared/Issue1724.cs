@@ -6,9 +6,13 @@ using System.Threading;
 using System.Collections.Generic;
 using Xamarin.Forms.PlatformConfiguration;
 using Xamarin.Forms.PlatformConfiguration.AndroidSpecific;
+using System.Threading.Tasks;
 
 namespace Xamarin.Forms.Controls.Issues
 {
+#if UITEST
+	[NUnit.Framework.Category(Core.UITests.UITestCategories.Github5000)]
+#endif
 	[Preserve(AllMembers = true)]
 	[Issue(IssueTracker.Github, 1724, "[Enhancement] ImageButton", PlatformAffected.All)]
 	public class Issue1724 : TestContentPage
@@ -94,7 +98,7 @@ namespace Xamarin.Forms.Controls.Issues
 					new Label(){ Text = "Do you see image from a Uri?" },
 					new ImageButton()
 					{
-						Source = "https://raw.githubusercontent.com/xamarin/Xamarin.Forms/master/Xamarin.Forms.Controls/coffee.png",
+						Source = "https://raw.githubusercontent.com/xamarin/Xamarin.Forms/main/Xamarin.Forms.Controls/coffee.png",
 						BackgroundColor = Color.ForestGreen
 					},
 					new Label(){ Text = "Invalid Image Uri just to test it doesn't crash" },
@@ -164,7 +168,7 @@ namespace Xamarin.Forms.Controls.Issues
 
 			var buttons = layout.Children.OfType<ImageButton>();
 			layout.Children.Insert(0, ActionGrid(buttons.ToList()));
-			PaddingAnimation(buttons).Start();
+			PaddingAnimation(buttons);
 
 			Content = new ScrollView() { Content = layout };
 		}
@@ -218,9 +222,9 @@ namespace Xamarin.Forms.Controls.Issues
 			return actionGrid;
 		}
 
-		Thread PaddingAnimation(IEnumerable<ImageButton> buttons)
+		void PaddingAnimation(IEnumerable<ImageButton> buttons)
 		{
-			return new Thread(() =>
+			Task.Run(async () =>
 			{
 				int increment = 1;
 				int current = 0;
@@ -230,7 +234,7 @@ namespace Xamarin.Forms.Controls.Issues
 
 				while (true)
 				{
-					Thread.Sleep(sleep);
+					await Task.Delay(sleep);
 
 					if (!animation)
 						continue;

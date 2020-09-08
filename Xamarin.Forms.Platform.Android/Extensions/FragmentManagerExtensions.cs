@@ -1,6 +1,5 @@
-using FragmentTransaction = Android.Support.V4.App.FragmentTransaction;
-using Fragment = Android.Support.V4.App.Fragment;
-using FragmentManager = Android.Support.V4.App.FragmentManager;
+
+using AndroidX.Fragment.App;
 
 namespace Xamarin.Forms.Platform.Android
 {

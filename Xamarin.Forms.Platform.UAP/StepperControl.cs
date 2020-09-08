@@ -4,6 +4,7 @@ using System.Linq;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
+using WBrush = Windows.UI.Xaml.Media.Brush;
 using WVisualStateManager = Windows.UI.Xaml.VisualStateManager;
 using WVisualStateGroup = Windows.UI.Xaml.VisualStateGroup;
 using WVisualState = Windows.UI.Xaml.VisualState;
@@ -23,6 +24,8 @@ namespace Xamarin.Forms.Platform.UWP
 
 		public static readonly DependencyProperty ButtonBackgroundColorProperty = DependencyProperty.Register(nameof(ButtonBackgroundColor), typeof(Color), typeof(StepperControl), new PropertyMetadata(default(Color), OnButtonBackgroundColorChanged));
 
+		public static readonly DependencyProperty ButtonBackgroundProperty = DependencyProperty.Register(nameof(ButtonBackground), typeof(Brush), typeof(StepperControl), new PropertyMetadata(default(Brush), OnButtonBackgroundChanged));
+	
 		Windows.UI.Xaml.Controls.Button _plus;
 		Windows.UI.Xaml.Controls.Button _minus;
 		VisualStateCache _plusStateCache;
@@ -63,6 +66,12 @@ namespace Xamarin.Forms.Platform.UWP
 			set { SetValue(ButtonBackgroundColorProperty, value); }
 		}
 
+		public Brush ButtonBackground
+		{
+			get { return (Brush)GetValue(ButtonBackgroundProperty); }
+			set { SetValue(ButtonBackgroundProperty, value); }
+		}
+
 		public event EventHandler ValueChanged;
 
 		protected override void OnApplyTemplate()
@@ -85,6 +94,12 @@ namespace Xamarin.Forms.Platform.UWP
 		{
 			var stepper = (StepperControl)d;
 			stepper.UpdateButtonBackgroundColor(stepper.ButtonBackgroundColor);
+		}
+
+		static void OnButtonBackgroundChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			var stepper = (StepperControl)d;
+			stepper.UpdateButtonBackground(stepper.ButtonBackground);
 		}
 
 		static void OnIncrementChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -209,7 +224,18 @@ namespace Xamarin.Forms.Platform.UWP
 
 		void UpdateButtonBackgroundColor(Color value)
 		{
-			Brush brush = value.ToBrush();
+			WBrush brush = value.ToBrush();
+			_minus = GetTemplateChild("Minus") as Windows.UI.Xaml.Controls.Button;
+			_plus = GetTemplateChild("Plus") as Windows.UI.Xaml.Controls.Button;
+			if (_minus != null)
+				_minus.Background = brush;
+			if (_plus != null)
+				_plus.Background = brush;
+		}
+
+		void UpdateButtonBackground(Brush value)
+		{
+			var brush = value.ToBrush();
 			_minus = GetTemplateChild("Minus") as Windows.UI.Xaml.Controls.Button;
 			_plus = GetTemplateChild("Plus") as Windows.UI.Xaml.Controls.Button;
 			if (_minus != null)
@@ -223,17 +249,17 @@ namespace Xamarin.Forms.Platform.UWP
 			double increment = Increment;
 			if (_plus != null)
 			{
-				if (value + increment > Maximum)
+				if (value + increment > Maximum && _plusStateCache is null)
 					_plusStateCache = PseudoDisable(_plus);
-				else
+				else if (value + increment <= Maximum)
 					PsuedoEnable(_plus, ref _plusStateCache);
 			}
 
 			if (_minus != null)
 			{
-				if (value - increment < Minimum)
+				if (value - increment < Minimum && _minusStateCache is null)
 					_minusStateCache = PseudoDisable(_minus);
-				else
+				else if (value - increment >= Minimum)
 					PsuedoEnable(_minus, ref _minusStateCache);
 			}
 		}

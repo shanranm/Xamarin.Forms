@@ -16,6 +16,7 @@ namespace Xamarin.Forms.Platform.Tizen
 			RegisterPropertyHandler(Entry.FontFamilyProperty, UpdateFontFamily);
 			RegisterPropertyHandler(Entry.FontAttributesProperty, UpdateFontAttributes);
 			RegisterPropertyHandler(Entry.HorizontalTextAlignmentProperty, UpdateHorizontalTextAlignment);
+			RegisterPropertyHandler(Entry.VerticalTextAlignmentProperty, UpdateVerticalTextAlignment);
 			RegisterPropertyHandler(InputView.KeyboardProperty, UpdateKeyboard);
 			RegisterPropertyHandler(Entry.PlaceholderProperty, UpdatePlaceholder);
 			RegisterPropertyHandler(Entry.PlaceholderColorProperty, UpdatePlaceholderColor);
@@ -26,6 +27,8 @@ namespace Xamarin.Forms.Platform.Tizen
 			RegisterPropertyHandler(Specific.FontWeightProperty, UpdateFontWeight);
 			RegisterPropertyHandler(Entry.SelectionLengthProperty, UpdateSelectionLength);
 			RegisterPropertyHandler(InputView.IsReadOnlyProperty, UpdateIsReadOnly);
+			RegisterPropertyHandler(Entry.ClearButtonVisibilityProperty, UpdateClearButtonVisibility);
+			RegisterPropertyHandler(Entry.CursorPositionProperty, UpdateSelectionLength);
 		}
 
 		protected override void OnElementChanged(ElementChangedEventArgs<Entry> e)
@@ -33,8 +36,6 @@ namespace Xamarin.Forms.Platform.Tizen
 			if (Control == null)
 			{
 				var entry = CreateNativeControl();
-				entry.SetVerticalTextAlignment("elm.text", 0.5);
-				entry.SetVerticalTextAlignment("elm.guide", 0.5);
 				entry.Activated += OnCompleted;
 				entry.CursorChanged += OnCursorChanged;
 
@@ -44,8 +45,6 @@ namespace Xamarin.Forms.Platform.Tizen
 				}
 				entry.PrependMarkUpFilter(MaxLengthFilter);
 				SetNativeControl(entry);
-
-				
 			}
 			base.OnElementChanged(e);
 		}
@@ -99,9 +98,14 @@ namespace Xamarin.Forms.Platform.Tizen
 
 		void OnCompleted(object sender, EventArgs e)
 		{
-			//TODO Consider if any other object should overtake focus
-			Control.SetFocus(false);
-
+			if (Element.ReturnType == ReturnType.Next)
+			{
+				FocusSearch(true)?.SetFocus(true);
+			}
+			else
+			{
+				Control.SetFocus(false);
+			}
 			((IEntryController)Element).SendCompleted();
 		}
 
@@ -139,7 +143,7 @@ namespace Xamarin.Forms.Platform.Tizen
 		{
 			if (Control is IEntry ie)
 			{
-				ie.FontFamily = Element.FontFamily;
+				ie.FontFamily = Element.FontFamily.ToNativeFontFamily();
 			}
 		}
 
@@ -148,7 +152,7 @@ namespace Xamarin.Forms.Platform.Tizen
 			if (Control is IEntry ie)
 			{
 				ie.FontAttributes = Element.FontAttributes;
-			}			
+			}
 		}
 
 		void UpdateHorizontalTextAlignment()
@@ -156,7 +160,13 @@ namespace Xamarin.Forms.Platform.Tizen
 			if (Control is IEntry ie)
 			{
 				ie.HorizontalTextAlignment = Element.HorizontalTextAlignment.ToNative();
-			}			
+			}
+		}
+
+		void UpdateVerticalTextAlignment()
+		{
+			Control.SetVerticalTextAlignment(Element.VerticalTextAlignment.ToNativeDouble());
+			Control.SetVerticalPlaceHolderTextAlignment(Element.VerticalTextAlignment.ToNativeDouble());
 		}
 
 		void UpdateKeyboard(bool initialize)
@@ -217,28 +227,84 @@ namespace Xamarin.Forms.Platform.Tizen
 
 		void UpdateSelectionLength()
 		{
-			var selectionLength = Control.GetSelection()?.Length ?? 0;
-			if (selectionLength != Element.SelectionLength)
+			int start = GetSelectionStart();
+			int end = GetSelectionEnd(start);
+
+			if (start != end)
 			{
-				if (Element.SelectionLength == 0)
-				{
-					Control.SelectNone();
-				}
-				else
-				{
-					Control.SetSelectionRegion(Element.CursorPosition, Element.CursorPosition + Element.SelectionLength);
-				}
+				Control.SetSelectionRegion(start, end);
 			}
-			else if (selectionLength == 0)
+			else
 			{
+				Control.CursorPosition = start;
 				Control.SelectNone();
+				Control.SetFocus(true);
 			}
+		}
+
+		int GetSelectionEnd(int start)
+		{
+			int end = start;
+			int selectionLength = Element.SelectionLength;
+
+			if (Element.IsSet(Entry.SelectionLengthProperty))
+				end = Math.Max(start, Math.Min(Control.Text.Length, start + selectionLength));
+
+			int newSelectionLength = Math.Max(0, end - start);
+			if (newSelectionLength != selectionLength)
+				SetSelectionLengthFromRenderer(newSelectionLength);
+
+			return end;
+		}
+
+		int GetSelectionStart()
+		{
+			int start = Element.Text.Length;
+			int cursorPosition = Element.CursorPosition;
+
+			if (Element.IsSet(Entry.CursorPositionProperty))
+				start = Math.Min(start, cursorPosition);
+
+			if (start != cursorPosition)
+				SetCursorPositionFromRenderer(start);
+
+			return start;
 		}
 
 		void OnCursorChanged(object sender, EventArgs e)
 		{
-			Element.SetValueFromRenderer(Entry.CursorPositionProperty, GetCursorPosition());
-			Element.SetValueFromRenderer(Entry.SelectionLengthProperty, Control.GetSelection()?.Length ?? 0);
+			int cursorPosition = Element.CursorPosition;
+			int selectionStart = GetCursorPosition();
+
+			if (selectionStart != cursorPosition)
+				SetCursorPositionFromRenderer(selectionStart);
+
+			SetSelectionLengthFromRenderer(Control.GetSelection()?.Length ?? 0);
+
+		}
+
+		void SetCursorPositionFromRenderer(int start)
+		{
+			try
+			{
+				Element?.SetValueFromRenderer(Entry.CursorPositionProperty, start);
+			}
+			catch (Exception ex)
+			{
+				Internals.Log.Warning("Entry", $"Failed to set CursorPosition from renderer: {ex}");
+			}
+		}
+
+		void SetSelectionLengthFromRenderer(int selectionLength)
+		{
+			try
+			{
+				Element?.SetValueFromRenderer(Entry.SelectionLengthProperty, selectionLength);
+			}
+			catch (Exception ex)
+			{
+				Internals.Log.Warning("Entry", $"Failed to set SelectionLength from renderer: {ex}");
+			}
 		}
 
 		int GetCursorPosition()
@@ -255,6 +321,24 @@ namespace Xamarin.Forms.Platform.Tizen
 		void UpdateIsReadOnly()
 		{
 			Control.IsEditable = !Element.IsReadOnly;
+		}
+
+		void UpdateClearButtonVisibility(bool init)
+		{
+			if (Element.ClearButtonVisibility == ClearButtonVisibility.WhileEditing)
+			{
+				if (Control is Native.EditfieldEntry editfieldEntry)
+				{
+					editfieldEntry.EnableClearButton = true;
+				}
+			}
+			else if (!init)
+			{
+				if (Control is Native.EditfieldEntry editfieldEntry)
+				{
+					editfieldEntry.EnableClearButton = false;
+				}
+			}
 		}
 	}
 }

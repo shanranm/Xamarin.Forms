@@ -1,7 +1,9 @@
 ﻿using Android.Content;
 using Android.Graphics;
 using Android.Graphics.Drawables;
-using Android.Support.V7.Widget;
+using AndroidX.AppCompat.Widget;
+using ASupportDrawable = AndroidX.AppCompat.Graphics.Drawable;
+using AndroidX.CardView.Widget;
 using Android.Text;
 using Android.Views;
 using Android.Views.InputMethods;
@@ -15,7 +17,6 @@ using AColor = Android.Graphics.Color;
 using AView = Android.Views.View;
 using LP = Android.Views.ViewGroup.LayoutParams;
 using AImageButton = Android.Widget.ImageButton;
-using ASupportDrawable = Android.Support.V7.Graphics.Drawable;
 
 namespace Xamarin.Forms.Platform.Android
 {
@@ -116,7 +117,6 @@ namespace Xamarin.Forms.Platform.Android
 				v.HideKeyboard();
 				SearchConfirmed?.Invoke(this, EventArgs.Empty);
 				Controller.QueryConfirmed();
-				_textBlock.Text = "";
 			}
 
 			return true;

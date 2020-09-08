@@ -4,6 +4,7 @@ using Android.App;
 using Android.Content;
 using Android.OS;
 using Android.Views;
+using Fragment = AndroidX.Fragment.App.Fragment;
 
 namespace Xamarin.Forms.Platform.Android
 {
@@ -72,7 +73,7 @@ namespace Xamarin.Forms.Platform.Android
 		}
 #pragma warning restore 618
 
-		public static global::Android.Support.V4.App.Fragment CreateSupportFragment(this ContentPage view, Context context)
+		public static Fragment CreateSupportFragment(this ContentPage view, Context context)
 		{
 			if (!Forms.IsInitialized)
 				throw new InvalidOperationException("call Forms.Init() before this");
@@ -95,7 +96,7 @@ namespace Xamarin.Forms.Platform.Android
 		{
 		}
 
-		class EmbeddedSupportFragment : global::Android.Support.V4.App.Fragment
+		class EmbeddedSupportFragment : Fragment
 		{
 			readonly ViewGroup _content;
 			readonly Platform _platform;

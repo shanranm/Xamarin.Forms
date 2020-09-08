@@ -494,6 +494,29 @@ namespace Xamarin.Forms.Platform.Tizen
 			}
 		}
 
+		protected Widget FocusSearch(bool forwardDirection)
+		{
+			VisualElement element = Element as VisualElement;
+			int maxAttempts = 0;
+			var tabIndexes = element?.GetTabIndexesOnParentPage(out maxAttempts);
+			if (tabIndexes == null)
+				return null;
+
+			int tabIndex = Element.TabIndex;
+			int attempt = 0;
+
+			do
+			{
+				element = element.FindNextElement(forwardDirection, tabIndexes, ref tabIndex) as VisualElement;
+				var renderer = Platform.GetRenderer(element);
+				if (renderer?.NativeView is Widget widget && widget.IsFocusAllowed)
+				{
+					return widget;
+				}
+			} while (!(element.IsFocused || ++attempt >= maxAttempts));
+			return null;
+		}
+
 		internal virtual void SendVisualElementInitialized(VisualElement element, EvasObject nativeView)
 		{
 			element.SendViewInitialized(nativeView);
@@ -670,7 +693,7 @@ namespace Xamarin.Forms.Platform.Tizen
 		/// <summary>
 		/// Handles focus events.
 		/// </summary>
-		void OnFocused(object sender, EventArgs e)
+		protected virtual void OnFocused(object sender, EventArgs e)
 		{
 			if (null != Element)
 			{
@@ -681,7 +704,7 @@ namespace Xamarin.Forms.Platform.Tizen
 		/// <summary>
 		/// Handles unfocus events.
 		/// </summary>
-		void OnUnfocused(object sender, EventArgs e)
+		protected virtual void OnUnfocused(object sender, EventArgs e)
 		{
 			if (null != Element)
 			{
@@ -994,6 +1017,10 @@ namespace Xamarin.Forms.Platform.Tizen
 			{
 				map.Rotate3D(rotationX, rotationY, rotationZ, (int)(geometry.X + geometry.Width * anchorX),
 															  (int)(geometry.Y + geometry.Height * anchorY), 0);
+				// the last argument is focal length, it determine the strength of distortion. We compared it with the Android implementation
+				map.Perspective3D(geometry.X + geometry.Width / 2, geometry.Y + geometry.Height / 2, 0, (int)(1.3 * Math.Max(geometry.Height, geometry.Width)));
+				// Need to unset clip because perspective 3d rotation is going beyond the container bound
+				NativeView.SetClip(null);
 				changed = true;
 			}
 		}

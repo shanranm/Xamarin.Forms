@@ -1,12 +1,10 @@
-#if __ANDROID_28__
+
 using System;
 using System.ComponentModel;
 using Android.Content;
-using Android.Support.V4.View;
+using AndroidX.Core.View;
 using Android.Views;
-using Xamarin.Forms;
 using Xamarin.Forms.Platform.Android.FastRenderers;
-using Xamarin.Forms.Material.Android;
 using AProgressBar = Android.Widget.ProgressBar;
 using AView = Android.Views.View;
 using Xamarin.Forms.Platform.Android;
@@ -169,4 +167,3 @@ namespace Xamarin.Forms.Material.Android
 		AView ITabStop.TabStop => this;
 	}
 }
-#endif

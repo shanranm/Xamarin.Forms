@@ -1,12 +1,7 @@
-﻿using System;
-using Android.Content;
+﻿using Android.Content;
 using Android.Content.Res;
 using Xamarin.Forms.Platform.Android;
-using AColor = Android.Graphics.Color;
-using AColorUtils = Android.Support.V4.Graphics.ColorUtils;
 using AAttribute = Android.Resource.Attribute;
-using Android.Graphics.Drawables;
-using Android.Graphics;
 
 namespace Xamarin.Forms.Material.Android
 {

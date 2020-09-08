@@ -1,5 +1,5 @@
 ﻿using Android.Graphics.Drawables;
-using Android.Support.Design.Widget;
+using Google.Android.Material.Tabs;
 
 namespace Xamarin.Forms.Platform.Android
 {

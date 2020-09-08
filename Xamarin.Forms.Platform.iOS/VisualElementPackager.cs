@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
 using Xamarin.Forms.Internals;
 
 #if __MOBILE__
@@ -51,6 +52,21 @@ namespace Xamarin.Forms.Platform.MacOS
 					OrderElement(child, i);
 				}
 			}
+		}
+		
+		internal void Disconnect()
+		{
+			Disconnect(_element);
+		}
+
+		void Disconnect(VisualElement oldElement)
+		{
+			if (oldElement == null)
+				return;
+
+			oldElement.ChildAdded -= OnChildAdded;
+			oldElement.ChildRemoved -= OnChildRemoved;
+			oldElement.ChildrenReordered -= UpdateChildrenOrder;
 		}
 
 		protected virtual void Dispose(bool disposing)
@@ -109,6 +125,7 @@ namespace Xamarin.Forms.Platform.MacOS
 				if (Renderer.ViewController != null && viewRenderer.ViewController != null)
 					Renderer.ViewController.AddChildViewController(viewRenderer.ViewController);
 			}
+
 			Performance.Stop(reference);
 		}
 
@@ -199,9 +216,7 @@ namespace Xamarin.Forms.Platform.MacOS
 
 			if (oldElement != null)
 			{
-				oldElement.ChildAdded -= OnChildAdded;
-				oldElement.ChildRemoved -= OnChildRemoved;
-				oldElement.ChildrenReordered -= UpdateChildrenOrder;
+				Disconnect(oldElement);
 
 				if (newElement != null)
 				{

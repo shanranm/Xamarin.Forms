@@ -1,6 +1,5 @@
-﻿using Android.Support.Design.Widget;
-using System;
-using Toolbar = Android.Support.V7.Widget.Toolbar;
+﻿using System;
+using Google.Android.Material.Tabs;
 
 namespace Xamarin.Forms.Platform.Android
 {

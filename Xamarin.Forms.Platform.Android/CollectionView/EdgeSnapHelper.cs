@@ -1,4 +1,4 @@
-using Android.Support.V7.Widget;
+using AndroidX.RecyclerView.Widget;
 using AView = Android.Views.View;
 using ALayoutDirection = Android.Views.LayoutDirection;
 

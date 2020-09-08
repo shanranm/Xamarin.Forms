@@ -1,9 +1,8 @@
 using System;
 using System.ComponentModel;
 using System.Threading.Tasks;
-using Android.App;
 using Android.Content;
-using Android.Support.V4.Widget;
+using AndroidX.DrawerLayout.Widget;
 using Android.Views;
 using AView = Android.Views.View;
 using Android.OS;
@@ -136,6 +135,7 @@ namespace Xamarin.Forms.Platform.Android
 			activity?.ActionBar?.SetHomeButtonEnabled(true);
 
 			UpdateBackgroundColor(_page);
+			UpdateBackground(_page);
 			UpdateBackgroundImage(_page);
 
 			OnElementChanged(oldElement, element);
@@ -301,8 +301,10 @@ namespace Xamarin.Forms.Platform.Android
 				SetGestureState();
 			else if (e.PropertyName == Page.BackgroundImageSourceProperty.PropertyName)
 				UpdateBackgroundImage(_page);
-			if (e.PropertyName == VisualElement.BackgroundColorProperty.PropertyName)
+			else if (e.PropertyName == VisualElement.BackgroundColorProperty.PropertyName)
 				UpdateBackgroundColor(_page);
+			else if (e.PropertyName == VisualElement.BackgroundProperty.PropertyName)
+				UpdateBackground(_page);
 		}
 
 		void MasterDetailPageAppearing(object sender, EventArgs e)
@@ -349,6 +351,13 @@ namespace Xamarin.Forms.Platform.Android
 		{
 			if (view.BackgroundColor != Color.Default)
 				SetBackgroundColor(view.BackgroundColor.ToAndroid());
+		}
+
+		void UpdateBackground(Page view)
+		{
+			Brush background = view.Background;
+
+			this.UpdateBackground(background);
 		}
 
 		void UpdateBackgroundImage(Page view)

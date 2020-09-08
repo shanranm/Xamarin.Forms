@@ -1,17 +1,10 @@
-using System.IO;
-using System.Threading.Tasks;
 using Android.Content;
-using Android.Graphics;
-using Android.Support.V4.Content;
 using Android.Text;
 using Android.Views;
 using Android.Widget;
 using AView = Android.Views.View;
-using AColor = Android.Graphics.Color;
-using AColorDraw = Android.Graphics.Drawables.ColorDrawable;
 using Xamarin.Forms.Internals;
-using Android.Support.V4.Widget;
-using Android.OS;
+using AndroidX.Core.Widget;
 using System;
 
 namespace Xamarin.Forms.Platform.Android

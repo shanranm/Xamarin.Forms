@@ -1,7 +1,7 @@
 using System;
 using Android.Content;
 using Android.Runtime;
-using Android.Support.V4.View;
+using AndroidX.ViewPager.Widget;
 using Android.Util;
 using Android.Views;
 

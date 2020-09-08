@@ -1,7 +1,7 @@
-﻿#if __ANDROID_28__
+﻿
 using System;
 using Android.Content;
-using Android.Support.Design.Widget;
+using Google.Android.Material.TextField;
 using Xamarin.Forms.Platform.Android;
 
 namespace Xamarin.Forms.Material.Android
@@ -71,4 +71,3 @@ namespace Xamarin.Forms.Material.Android
 		}
 	}
 }
-#endif

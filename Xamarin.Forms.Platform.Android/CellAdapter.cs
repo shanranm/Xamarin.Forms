@@ -1,21 +1,18 @@
 using System;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using Android.App;
 using Android.Content;
 using Android.Util;
 using Android.Views;
 using Android.Widget;
 using AView = Android.Views.View;
 using AListView = Android.Widget.ListView;
-using Android.Graphics.Drawables;
-using Android.Support.V7.App;
-using AActionMode = global::Android.Support.V7.View.ActionMode;
+using AActionMode = global::AndroidX.AppCompat.View.ActionMode;
+using AndroidX.AppCompat.App;
 
 namespace Xamarin.Forms.Platform.Android
 {
-	public abstract class CellAdapter : BaseAdapter<object>, AdapterView.IOnItemLongClickListener, ActionMode.ICallback, AdapterView.IOnItemClickListener,
-										global::Android.Support.V7.View.ActionMode.ICallback
+	public abstract class CellAdapter : BaseAdapter<object>, AdapterView.IOnItemLongClickListener, ActionMode.ICallback, AdapterView.IOnItemClickListener, AActionMode.ICallback
 	{
 		readonly Context _context;
 		ActionMode _actionMode;
@@ -89,7 +86,7 @@ namespace Xamarin.Forms.Platform.Android
 			return true;
 		}
 
-		bool global::Android.Support.V7.View.ActionMode.ICallback.OnActionItemClicked(global::Android.Support.V7.View.ActionMode mode, IMenuItem item)
+		bool AActionMode.ICallback.OnActionItemClicked(AActionMode mode, IMenuItem item)
 		{
 			mode.Menu.Clear();
 			OnActionItemClickedImpl(item);
@@ -103,7 +100,7 @@ namespace Xamarin.Forms.Platform.Android
 			return true;
 		}
 
-		bool global::Android.Support.V7.View.ActionMode.ICallback.OnCreateActionMode(global::Android.Support.V7.View.ActionMode mode, IMenu menu)
+		bool AActionMode.ICallback.OnCreateActionMode(AActionMode mode, IMenu menu)
 		{
 			CreateContextMenu(menu);
 			return true;
@@ -116,7 +113,7 @@ namespace Xamarin.Forms.Platform.Android
 			_actionMode = null;
 		}
 
-		void global::Android.Support.V7.View.ActionMode.ICallback.OnDestroyActionMode(global::Android.Support.V7.View.ActionMode mode)
+		void AActionMode.ICallback.OnDestroyActionMode(AActionMode mode)
 		{
 			OnDestroyActionModeImpl();
 			_supportActionMode.Dispose();
@@ -128,7 +125,7 @@ namespace Xamarin.Forms.Platform.Android
 			return OnPrepareActionModeImpl(menu);
 		}
 
-		bool global::Android.Support.V7.View.ActionMode.ICallback.OnPrepareActionMode(global::Android.Support.V7.View.ActionMode mode, IMenu menu)
+		bool AActionMode.ICallback.OnPrepareActionMode(AActionMode mode, IMenu menu)
 		{
 			return OnPrepareActionModeImpl(menu);
 		}
@@ -262,6 +259,11 @@ namespace Xamarin.Forms.Platform.Android
 
 		void OnActionItemClickedImpl(IMenuItem item)
 		{
+			if (ActionModeContext == null)
+			{
+				return;
+			}
+
 			int index = item.ItemId;
 			IMenuItemController action = ActionModeContext.ContextActions[index];
 

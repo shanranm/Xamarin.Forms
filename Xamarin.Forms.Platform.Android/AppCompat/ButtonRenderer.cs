@@ -2,11 +2,10 @@ using System;
 using System.ComponentModel;
 using Android.Content;
 using Android.Graphics;
-using Android.Support.V7.Widget;
+using AndroidX.AppCompat.Widget;
 using Android.Util;
 using Android.Views;
 using Xamarin.Forms.Platform.Android.FastRenderers;
-using Xamarin.Forms.Internals;
 using Xamarin.Forms.PlatformConfiguration.AndroidSpecific;
 using AColor = Android.Graphics.Color;
 using AView = Android.Views.View;
@@ -120,6 +119,11 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 
 		protected override void OnElementPropertyChanged(object sender, PropertyChangedEventArgs e)
 		{
+			if (this.IsDisposed())
+			{
+				return;
+			}
+
 			if (e.PropertyName == Button.TextColorProperty.PropertyName)
 				UpdateTextColor();
 			else if (e.PropertyName == VisualElement.IsEnabledProperty.PropertyName)
@@ -220,6 +224,6 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 		}
 
 		AppCompatButton IButtonLayoutRenderer.View => Control;
-		bool IDisposedState.IsDisposed => _isDisposed;
+		bool IDisposedState.IsDisposed => _isDisposed || !Control.IsAlive();
 	}
 }

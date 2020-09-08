@@ -1,18 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-using Android.App;
 using Android.Content;
-using Android.OS;
-using Android.Runtime;
 using Android.Views;
 using Android.Widget;
-using Android.Support.Design.Widget;
-using Android.Support.Design.Internal;
 using AColor = Android.Graphics.Color;
-using AView = Android.Views.View;
 using ColorStateList = Android.Content.Res.ColorStateList;
 using IMenu = Android.Views.IMenu;
 using LP = Android.Views.ViewGroup.LayoutParams;
@@ -21,10 +12,9 @@ using Typeface = Android.Graphics.Typeface;
 using TypefaceStyle = Android.Graphics.TypefaceStyle;
 using Android.Graphics.Drawables;
 using System.Threading.Tasks;
-
-#if __ANDROID_28__
-using ALabelVisibilityMode = Android.Support.Design.BottomNavigation.LabelVisibilityMode;
-#endif
+using Google.Android.Material.BottomNavigation;
+using Google.Android.Material.BottomSheet;
+using ALabelVisibilityMode = Google.Android.Material.BottomNavigation.LabelVisibilityMode;
 
 namespace Xamarin.Forms.Platform.Android
 {
@@ -35,7 +25,12 @@ namespace Xamarin.Forms.Platform.Android
 		public static Drawable CreateItemBackgroundDrawable()
 		{
 			var stateList = ColorStateList.ValueOf(Color.Black.MultiplyAlpha(0.2).ToAndroid());
-			return new RippleDrawable(stateList, new ColorDrawable(AColor.White), null);
+			var colorDrawable = new ColorDrawable(AColor.White);
+
+			if (Forms.IsLollipopOrNewer)
+				return new RippleDrawable(stateList, colorDrawable, null);
+
+			return colorDrawable;
 		}
 
 		internal static void UpdateEnabled(bool tabEnabled, IMenuItem menuItem)
@@ -45,11 +40,11 @@ namespace Xamarin.Forms.Platform.Android
 		}
 
 		internal static async void SetupMenu(
-			IMenu menu, 
-			int maxBottomItems, 
-			List<(string title, ImageSource icon, bool tabEnabled)> items, 
-			int currentIndex, 
-			BottomNavigationView bottomView, 
+			IMenu menu,
+			int maxBottomItems,
+			List<(string title, ImageSource icon, bool tabEnabled)> items,
+			int currentIndex,
+			BottomNavigationView bottomView,
 			Context context)
 		{
 			menu.Clear();
@@ -79,10 +74,9 @@ namespace Xamarin.Forms.Platform.Android
 
 			if (showMore)
 			{
-				var moreString = new Java.Lang.String("More");
+				var moreString = context.Resources.GetText(Resource.String.overflow_tab_title);
 				var menuItem = menu.Add(0, MoreTabId, 0, moreString);
 				menuItems.Add(menuItem);
-				moreString.Dispose();
 
 				menuItem.SetIcon(Resource.Drawable.abc_ic_menu_overflow_material);
 				if (currentIndex >= maxBottomItems - 1)
@@ -103,7 +97,7 @@ namespace Xamarin.Forms.Platform.Android
 			if (source == null)
 				return;
 			var drawable = await context.GetFormsDrawableAsync(source);
-			menuItem.SetIcon(drawable);			
+			menuItem.SetIcon(drawable);
 			drawable?.Dispose();
 		}
 
@@ -117,7 +111,7 @@ namespace Xamarin.Forms.Platform.Android
 		}
 
 		internal static BottomSheetDialog CreateMoreBottomSheet(
-			Action<int, BottomSheetDialog> selectCallback, 
+			Action<int, BottomSheetDialog> selectCallback,
 			Context context,
 			List<(string title, ImageSource icon, bool tabEnabled)> items,
 			int maxItemCount)
@@ -136,7 +130,10 @@ namespace Xamarin.Forms.Platform.Android
 
 				using (var innerLayout = new LinearLayout(context))
 				{
-					innerLayout.ClipToOutline = true;
+					if(Forms.IsLollipopOrNewer)
+					{
+						innerLayout.ClipToOutline = true;
+					}
 					innerLayout.SetBackground(CreateItemBackgroundDrawable());
 					innerLayout.SetPadding(0, (int)context.ToPixels(6), 0, (int)context.ToPixels(6));
 					innerLayout.Orientation = Orientation.Horizontal;
@@ -164,8 +161,12 @@ namespace Xamarin.Forms.Platform.Android
 					};
 					image.LayoutParameters = lp;
 					lp.Dispose();
+					
+					if (Forms.IsLollipopOrNewer)
+					{
+						image.ImageTintList = ColorStateList.ValueOf(Color.Black.MultiplyAlpha(0.6).ToAndroid());
+					}
 
-					image.ImageTintList = ColorStateList.ValueOf(Color.Black.MultiplyAlpha(0.6).ToAndroid());
 					image.SetImage(shellContent.icon, context);
 
 					innerLayout.AddView(image);

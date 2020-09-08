@@ -1,4 +1,4 @@
-using Android.Support.V4.App;
+using AndroidX.Fragment.App;
 
 namespace Xamarin.Forms.Platform.Android.AppCompat
 {

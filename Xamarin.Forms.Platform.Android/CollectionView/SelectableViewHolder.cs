@@ -1,8 +1,8 @@
 using System;
 using System.Linq;
 using Android.Graphics.Drawables;
-using Android.Support.V4.Content;
-using Android.Support.V7.Widget;
+using AndroidX.Core.Content;
+using AndroidX.RecyclerView.Widget;
 using Android.Util;
 
 namespace Xamarin.Forms.Platform.Android

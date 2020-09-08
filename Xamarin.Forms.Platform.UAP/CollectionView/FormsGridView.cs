@@ -12,6 +12,7 @@ namespace Xamarin.Forms.Platform.UWP
 		ItemsWrapGrid _wrapGrid;
 		ContentControl _emptyViewContentControl;
 		FrameworkElement _emptyView;
+		View _formsEmptyView;
 		Orientation _orientation;
 
 		public FormsGridView()
@@ -106,9 +107,10 @@ namespace Xamarin.Forms.Platform.UWP
 			FindItemsWrapGrid();
 		}
 
-		public void SetEmptyView(FrameworkElement emptyView)
+		public void SetEmptyView(FrameworkElement emptyView, View formsEmptyView)
 		{
 			_emptyView = emptyView;
+			_formsEmptyView = formsEmptyView;
 
 			if (_emptyViewContentControl != null)
 			{
@@ -122,10 +124,20 @@ namespace Xamarin.Forms.Platform.UWP
 
 			_emptyViewContentControl = GetTemplateChild("EmptyViewContentControl") as ContentControl;
 
-			if (_emptyView != null)
+			if (_emptyView != null && _emptyViewContentControl != null)
 			{
 				_emptyViewContentControl.Content = _emptyView;
 			}
+		}
+
+		protected override Windows.Foundation.Size ArrangeOverride(Windows.Foundation.Size finalSize)
+		{
+			if (_formsEmptyView != null)
+			{
+				_formsEmptyView.Layout(new Rectangle(0, 0, finalSize.Width, finalSize.Height));
+			}
+
+			return base.ArrangeOverride(finalSize);
 		}
 
 		protected override void PrepareContainerForItemOverride(DependencyObject element, object item)

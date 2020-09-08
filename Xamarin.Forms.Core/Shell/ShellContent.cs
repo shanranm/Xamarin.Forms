@@ -9,6 +9,7 @@ using System.Linq;
 #endif
 
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Xamarin.Forms.Internals;
 
 namespace Xamarin.Forms
@@ -44,6 +45,9 @@ namespace Xamarin.Forms
 		}
 
 		Page IShellContentController.Page => ContentCache;
+
+		EventHandler _isPageVisibleChanged;
+		event EventHandler IShellContentController.IsPageVisibleChanged { add => _isPageVisibleChanged += value; remove => _isPageVisibleChanged -= value; }
 
 		Page IShellContentController.GetOrCreateContent()
 		{
@@ -98,17 +102,63 @@ namespace Xamarin.Forms
 				return;
 
 			base.SendAppearing();
-			((ContentCache ?? Content) as Page)?.SendAppearing();
+
+			SendPageAppearing((ContentCache ?? Content) as Page);
+		}
+
+		void SendPageAppearing(Page page)
+		{
+			if (page == null)
+				return;
+
+			if (page.Parent == null)
+			{
+				page.ParentSet += OnPresentedPageParentSet;
+				void OnPresentedPageParentSet(object sender, EventArgs e)
+				{
+					page.SendAppearing();
+					(sender as Page).ParentSet -= OnPresentedPageParentSet;
+				}
+			}
+			else
+			{
+				page.SendAppearing();
+			}
 		}
 
 		protected override void OnChildAdded(Element child)
 		{
 			base.OnChildAdded(child);
-			if (child is Page page && IsVisibleContent)
+			if (child is Page page)
 			{
-				SendAppearing();
-				page.SendAppearing();
+				if (IsVisibleContent && page.IsVisible)
+				{
+					SendAppearing();
+					SendPageAppearing(page);
+				}
+
+				page.PropertyChanged += OnPagePropertyChanged;
+				_isPageVisibleChanged?.Invoke(this, EventArgs.Empty);
 			}
+		}
+
+		[Obsolete("OnChildRemoved(Element) is obsolete as of version 4.8.0. Please use OnChildRemoved(Element, int) instead.")]
+		protected override void OnChildRemoved(Element child) => OnChildRemoved(child, -1);
+
+		protected override void OnChildRemoved(Element child, int oldLogicalIndex)
+		{
+			base.OnChildRemoved(child, oldLogicalIndex);
+			if (child is Page page)
+			{
+				page.PropertyChanged -= OnPagePropertyChanged;
+			}
+		}
+		
+
+		void OnPagePropertyChanged(object sender, PropertyChangedEventArgs e)
+		{
+			if (e.PropertyName == Page.IsVisibleProperty.PropertyName)
+				_isPageVisibleChanged?.Invoke(this, EventArgs.Empty);
 		}
 
 		Page ContentCache
@@ -116,9 +166,17 @@ namespace Xamarin.Forms
 			get => _contentCache;
 			set
 			{
+				if (_contentCache == value)
+					return;
+
+				var oldCache = _contentCache;
 				_contentCache = value;
+				if(oldCache != null)
+					OnChildRemoved(oldCache, -1);
+
 				if (value != null && value.Parent != this)
 				{
+					_logicalChildren.Add(value);
 					OnChildAdded(value);
 				}
 
@@ -126,7 +184,7 @@ namespace Xamarin.Forms
 					((ShellSection)Parent).UpdateDisplayedPage();
 			}
 		}
-
+		
 		public static implicit operator ShellContent(TemplatedPage page)
 		{
 			var shellContent = new ShellContent();
@@ -152,7 +210,6 @@ namespace Xamarin.Forms
 				// deparent old item
 				if (oldValue is Page oldElement)
 				{
-					shellContent.OnChildRemoved(oldElement);
 					shellContent.ContentCache = null;
 				}
 
@@ -160,7 +217,6 @@ namespace Xamarin.Forms
 				shellContent._logicalChildren.Clear();
 				if (newValue is Page newElement)
 				{
-					shellContent._logicalChildren.Add((Element)newValue);
 					shellContent.ContentCache = newElement;
 				}
 				else if(newValue != null)
@@ -180,8 +236,11 @@ namespace Xamarin.Forms
 					OnChildAdded(el);
 
 			if (e.OldItems != null)
-				foreach (Element el in e.OldItems)
-					OnChildRemoved(el);
+				for (var i = 0; i < e.OldItems.Count; i++)
+				{
+					var el = (Element)e.OldItems[i];
+					OnChildRemoved(el, e.OldStartingIndex + i);
+				}
 		}
 
 		internal override void ApplyQueryAttributes(IDictionary<string, string> query)
@@ -189,23 +248,25 @@ namespace Xamarin.Forms
 			base.ApplyQueryAttributes(query);
 			SetValue(QueryAttributesProperty, query);
 
-			if (Content is BindableObject bindable)
+			if (ContentCache is BindableObject bindable)
 				bindable.SetValue(QueryAttributesProperty, query);
 		}
 
 		static void OnQueryAttributesPropertyChanged(BindableObject bindable, object oldValue, object newValue)
 		{
-			if (newValue is IDictionary<string, string> query)
-				ApplyQueryAttributes(bindable, query);
+			ApplyQueryAttributes(bindable, newValue as IDictionary<string, string>, oldValue as IDictionary<string, string>);
 		}
 
-		static void ApplyQueryAttributes(object content, IDictionary<string, string> query)
+		static void ApplyQueryAttributes(object content, IDictionary<string, string> query, IDictionary<string, string> oldQuery)
 		{
+			query = query ?? new Dictionary<string, string>();
+			oldQuery = oldQuery ?? new Dictionary<string, string>();
+
 			if (content is IQueryAttributable attributable)
 				attributable.ApplyQueryAttributes(query);
 
 			if (content is BindableObject bindable && bindable.BindingContext != null && content != bindable.BindingContext)
-				ApplyQueryAttributes(bindable.BindingContext, query);
+				ApplyQueryAttributes(bindable.BindingContext, query, oldQuery);
 
 			var type = content.GetType();
 			var typeInfo = type.GetTypeInfo();
@@ -224,6 +285,13 @@ namespace Xamarin.Forms
 
 					if (prop != null && prop.CanWrite && prop.SetMethod.IsPublic)
 						prop.SetValue(content, value);
+				}
+				else if (oldQuery.TryGetValue(attrib.QueryId, out var oldValue))
+				{
+					PropertyInfo prop = type.GetRuntimeProperty(attrib.Name);
+
+					if (prop != null && prop.CanWrite && prop.SetMethod.IsPublic)
+						prop.SetValue(content, null);
 				}
 			}
 		}

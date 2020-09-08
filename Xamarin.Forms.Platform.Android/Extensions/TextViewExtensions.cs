@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Android.Text;
 using Android.Widget;
 using System.Collections.Generic;
@@ -22,21 +22,18 @@ namespace Xamarin.Forms.Platform.Android
 			textView.SetMaxLines(maxLines);
 		}
 
-		static void SetMaxLines(this TextView textView, Label label, int lines)
+		public static void	SetLineBreakMode(this TextView textView, Label label)
 		{
-			// If the Label's MaxLines has been explicitly set, we should not set it here
-			if (label.MaxLines != (int)Label.MaxLinesProperty.DefaultValue)
-			{
-				return;
-			}
-
-			textView.SetMaxLines(lines);
+			var maxLines = SetLineBreak(textView, label.LineBreakMode);
+			textView.SetMaxLines(maxLines);
 		}
 
-		public static void SetLineBreakMode(this TextView textView, Label label)
-		{
-			var lineBreakMode = label.LineBreakMode;
+		public static void SetLineBreakMode(this TextView textView, Button button) =>
+			SetLineBreak(textView, button.LineBreakMode);
 
+
+		public static int SetLineBreak( TextView textView, LineBreakMode lineBreakMode)
+		{
 			int maxLines = Int32.MaxValue;
 			bool singleLine = false;
 
@@ -44,6 +41,7 @@ namespace Xamarin.Forms.Platform.Android
 			{
 				case LineBreakMode.NoWrap:
 					maxLines = 1;
+					singleLine = true;
 					textView.Ellipsize = null;
 					break;
 				case LineBreakMode.WordWrap:
@@ -59,6 +57,7 @@ namespace Xamarin.Forms.Platform.Android
 					break;
 				case LineBreakMode.TailTruncation:
 					maxLines = 1;
+					singleLine = true;
 					textView.Ellipsize = TextUtils.TruncateAt.End;
 					break;
 				case LineBreakMode.MiddleTruncation:
@@ -69,26 +68,24 @@ namespace Xamarin.Forms.Platform.Android
 			}
 
 			textView.SetSingleLine(singleLine);
-			textView.SetMaxLines(label, maxLines);
+			return maxLines;
 		}
 
 		public static void RecalculateSpanPositions(this TextView textView, Label element, SpannableString spannableString, SizeRequest finalSize)
 		{
-			var layout = textView.Layout;
-			if (layout == null)
-				return;
-
 			if (element?.FormattedText?.Spans == null || element.FormattedText.Spans.Count == 0)
-				return;
-
-			if (spannableString == null || spannableString.IsDisposed())
 				return;
 
 			var labelWidth = finalSize.Request.Width;
 			if (labelWidth <= 0 || finalSize.Request.Height <= 0)
 				return;
 
-			var text = spannableString.ToString();
+			if (spannableString == null || spannableString.IsDisposed())
+				return;
+
+			var layout = textView.Layout;
+			if (layout == null)
+				return;
 
 			int next = 0;
 			int count = 0;
@@ -117,6 +114,15 @@ namespace Xamarin.Forms.Platform.Android
 				var startSpanOffset = spannableString.GetSpanStart(startSpan);
 				var endSpanOffset = spannableString.GetSpanEnd(endSpan);
 
+				var thisLine = layout.GetLineForOffset(endSpanOffset);
+				var lineStart = layout.GetLineStart(thisLine);
+				var lineEnd = layout.GetLineEnd(thisLine);
+
+				//If this is true, endSpanOffset has the value for another line that belong to the next span and not it self. 
+				//So it should be rearranged to value not pass the lineEnd.
+				if (endSpanOffset > (lineEnd - lineStart))
+					endSpanOffset = lineEnd;
+
 				var startX = layout.GetPrimaryHorizontal(startSpanOffset);
 				var endX = layout.GetPrimaryHorizontal(endSpanOffset);
 
@@ -136,6 +142,7 @@ namespace Xamarin.Forms.Platform.Android
 				}
 
 				var yaxis = 0.0;
+
 
 				for (var line = startLine; line > 0; line--)
 					yaxis += totalLineHeights[line];

@@ -1,5 +1,5 @@
 ﻿using System;
-using Android.Support.V7.Widget;
+using AndroidX.AppCompat.Widget;
 
 namespace Xamarin.Forms.Platform.Android
 {

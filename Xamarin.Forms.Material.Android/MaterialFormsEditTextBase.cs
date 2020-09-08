@@ -1,12 +1,11 @@
-﻿#if __ANDROID_28__
-using System;
+﻿using System;
 using Android.Content;
-using Android.Graphics;
 using Android.Views;
-using Android.Support.Design.Widget;
+using Google.Android.Material.TextField;
 using Android.Runtime;
 using Android.Util;
 using Xamarin.Forms.Platform.Android;
+using ARect = Android.Graphics.Rect;
 
 namespace Xamarin.Forms.Material.Android
 {
@@ -47,10 +46,9 @@ namespace Xamarin.Forms.Material.Android
 			return _descendantFocusToggler.RequestFocus(this, baseRequestFocus);
 		}
 
-		public override bool RequestFocus(FocusSearchDirection direction, Rect previouslyFocusedRect)
+		public override bool RequestFocus(FocusSearchDirection direction, ARect previouslyFocusedRect)
 		{
 			return (this as IDescendantFocusToggler).RequestFocus(this, () => base.RequestFocus(direction, previouslyFocusedRect));
 		}
 	}
 }
-#endif

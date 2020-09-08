@@ -1,13 +1,10 @@
-#if __ANDROID_28__
 using System;
 using System.ComponentModel;
 using Android.Content;
-using Android.Support.V4.View;
+using AndroidX.Core.View;
 using Android.Views;
 using Android.Widget;
-using Xamarin.Forms;
 using Xamarin.Forms.Platform.Android.FastRenderers;
-using Xamarin.Forms.Material.Android;
 using AView = Android.Views.View;
 using Xamarin.Forms.Platform.Android;
 
@@ -134,7 +131,7 @@ namespace Xamarin.Forms.Material.Android
 
 			if (e.IsOneOf(Slider.ValueProperty, Slider.MinimumProperty, Slider.MaximumProperty))
 				UpdateValue();
-			else if (e.IsOneOf(VisualElement.BackgroundColorProperty, Slider.MaximumTrackColorProperty, Slider.MinimumTrackColorProperty, Slider.ThumbColorProperty))
+			else if (e.IsOneOf(VisualElement.BackgroundColorProperty, VisualElement.BackgroundProperty, Slider.MaximumTrackColorProperty, Slider.MinimumTrackColorProperty, Slider.ThumbColorProperty))
 				UpdateColors();
 			else if (e.PropertyName == VisualElement.InputTransparentProperty.PropertyName)
 				UpdateInputTransparent();
@@ -221,4 +218,3 @@ namespace Xamarin.Forms.Material.Android
 
 	}
 }
-#endif

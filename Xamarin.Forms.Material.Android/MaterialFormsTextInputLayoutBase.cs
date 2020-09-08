@@ -1,13 +1,12 @@
-﻿#if __ANDROID_28__
+﻿
 using System;
 using Android.Content;
-using Android.Support.Design.Widget;
 using Android.Runtime;
 using Android.Util;
-using Android.Support.V4.View;
+using AndroidX.Core.View;
+using Google.Android.Material.TextField;
 using Android.Content.Res;
 using AView = Android.Views.View;
-using Xamarin.Forms.Platform.Android.AppCompat;
 using Xamarin.Forms.Platform.Android;
 using Android.Widget;
 
@@ -46,7 +45,7 @@ namespace Xamarin.Forms.Material.Android
 			_formsPlaceholderColor = formsPlaceHolderColor;
 			_formsTextColor = formsTextColor;
 
-			var underlineColors = MaterialColors.GetUnderlineColor(_formsTextColor);
+			var underlineColors = MaterialColors.GetUnderlineColor(_formsPlaceholderColor);
 			var placeHolderColors = MaterialColors.GetPlaceHolderColor(_formsPlaceholderColor, _formsTextColor);
 
 			// I realize these are the same but I have to set it to a difference instance
@@ -62,7 +61,7 @@ namespace Xamarin.Forms.Material.Android
 			EditText.SetTextColor(new ColorStateList(s_colorStates, new[] { textColor, textColor }));
 		}
 
-		internal void ApplyTheme(Color formsTextColor, Color formsPlaceHolderColor)
+		public virtual void ApplyTheme(Color formsTextColor, Color formsPlaceHolderColor)
 		{
 			if (_disposed)
 				return;
@@ -111,7 +110,7 @@ namespace Xamarin.Forms.Material.Android
 
 		}
 
-		internal void SetHint(string hint, VisualElement element)
+		public virtual void SetHint(string hint, VisualElement element)
 		{
 			HintEnabled = !string.IsNullOrWhiteSpace(hint);
 			if (HintEnabled)
@@ -148,4 +147,3 @@ namespace Xamarin.Forms.Material.Android
 		}
 	}
 }
-#endif

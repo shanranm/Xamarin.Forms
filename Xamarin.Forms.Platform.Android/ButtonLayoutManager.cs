@@ -1,15 +1,14 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using Android.Content;
-using Android.Graphics;
 using Android.Graphics.Drawables;
-using Android.Support.V4.View;
-using Android.Support.V4.Widget;
-using Android.Support.V7.Widget;
+using AndroidX.Core.View;
+using AndroidX.Core.Widget;
 using Xamarin.Forms.Internals;
-using Xamarin.Forms.PlatformConfiguration.AndroidSpecific;
-using Specifics = Xamarin.Forms.PlatformConfiguration.AndroidSpecific;
+using ARect = Android.Graphics.Rect;
 using AView = Android.Views.View;
+using AButton = Android.Widget.Button;
+using Android.Text;	
 
 namespace Xamarin.Forms.Platform.Android
 {
@@ -24,7 +23,7 @@ namespace Xamarin.Forms.Platform.Android
 		Button.ButtonContentLayout _imageOnlyLayout = new Button.ButtonContentLayout(Button.ButtonContentLayout.ImagePosition.Left, 0);
 
 		// reuse this instance to save on allocations
-		Rect _drawableBounds = new Rect();
+		ARect _drawableBounds = new ARect();
 
 		bool _disposed;
 		IButtonLayoutRenderer _renderer;
@@ -55,7 +54,7 @@ namespace Xamarin.Forms.Platform.Android
 			_maintainLegacyMeasurements = maintainLegacyMeasurements;
 		}
 
-		AppCompatButton View => _renderer?.View;
+		AButton View => _renderer?.View ?? _renderer as AButton;
 
 		Context Context => _renderer?.View?.Context;
 
@@ -72,6 +71,11 @@ namespace Xamarin.Forms.Platform.Android
 				{
 					if (_renderer != null)
 					{
+						if (_element != null)
+						{
+							_element.PropertyChanged -= OnElementPropertyChanged;
+						}
+
 						_renderer.ElementChanged -= OnElementChanged;
 						_renderer = null;
 					}
@@ -102,7 +106,7 @@ namespace Xamarin.Forms.Platform.Android
 			if (_disposed || _renderer == null || _element == null)
 				return;
 
-			AppCompatButton view = View;
+			AButton view = View;
 			if (view == null)
 				return;
 
@@ -174,9 +178,13 @@ namespace Xamarin.Forms.Platform.Android
 
 		public void Update()
 		{
+			if (View?.LayoutParameters == null && _hasLayoutOccurred)
+				return;
+
 			if (!UpdateTextAndImage())
 				UpdateImage();
 			UpdatePadding();
+			UpdateLineBreakMode();
 		}
 
 		void OnElementChanged(object sender, VisualElementChangedEventArgs e)
@@ -205,15 +213,17 @@ namespace Xamarin.Forms.Platform.Android
 				UpdatePadding();
 			else if (e.PropertyName == Button.ImageSourceProperty.PropertyName || e.PropertyName == Button.ContentLayoutProperty.PropertyName)
 				UpdateImage();
-			else if (e.PropertyName == Button.TextProperty.PropertyName || e.PropertyName == VisualElement.IsVisibleProperty.PropertyName)
+			else if (e.IsOneOf(Button.TextProperty, VisualElement.IsVisibleProperty, Button.TextTransformProperty))
 				UpdateTextAndImage();
 			else if (e.PropertyName == Button.BorderWidthProperty.PropertyName && _borderAdjustsPadding)
 				_element.InvalidateMeasureNonVirtual(InvalidationTrigger.MeasureChanged);
+			else if (e.PropertyName == Button.LineBreakModeProperty.PropertyName)
+				UpdateLineBreakMode();
 		}
 
 		void UpdatePadding()
 		{
-			AppCompatButton view = View;
+			AButton view = View;
 			if (view == null)
 				return;
 
@@ -248,15 +258,22 @@ namespace Xamarin.Forms.Platform.Android
 
 		bool UpdateTextAndImage()
 		{
-			if (_disposed || _renderer == null || _element == null)
+			if (_disposed || _renderer?.View == null || _element == null)
 				return false;
 
-			AppCompatButton view = View;
+			if (View?.LayoutParameters == null && _hasLayoutOccurred)
+				return false;
+
+			AButton view = View;
 			if (view == null)
 				return false;
 
+			var textTransform = _element.TextTransform;
+			
+			_renderer.View.SetAllCaps(textTransform == TextTransform.Default);
+
 			string oldText = view.Text;
-			view.Text = _element.Text;
+			view.Text = _element.UpdateFormsText(_element.Text, textTransform);
 
 			// If we went from or to having no text, we need to update the image position
 			if (string.IsNullOrEmpty(oldText) != string.IsNullOrEmpty(view.Text))
@@ -273,7 +290,7 @@ namespace Xamarin.Forms.Platform.Android
 			if (_disposed || _renderer == null || _element == null)
 				return;
 
-			AppCompatButton view = View;
+			AButton view = View;
 			if (view == null)
 				return;
 
@@ -333,6 +350,17 @@ namespace Xamarin.Forms.Platform.Android
 						_element?.InvalidateMeasureNonVirtual(InvalidationTrigger.MeasureChanged);
 				});
 			}
+		}
+
+		void UpdateLineBreakMode()
+		{
+			AButton view = View;
+
+			if (view == null || _element == null || _renderer?.View == null)
+				return;
+
+			view.SetLineBreakMode(_element);
+			_renderer.View.SetAllCaps(_element.TextTransform == TextTransform.Default);
 		}
 	}
 }

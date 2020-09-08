@@ -1,26 +1,31 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using ElmSharp;
 using EColor = ElmSharp.Color;
+using EImage = ElmSharp.Image;
+using ERect = ElmSharp.Rect;
+using NBox = Xamarin.Forms.Platform.Tizen.Native.Box;
 
 namespace Xamarin.Forms.Platform.Tizen
 {
-	public class NavigationView : Native.Box, INavigationView
+	public class NavigationView : Background, INavigationView
 	{
+		NBox _box;
+		EImage _bg;
+		Aspect _bgImageAspect;
+		ImageSource _bgImageSource;
 		EvasObject _header;
 		GenList _menu;
 		GenItemClass _defaultClass;
 		EColor _backgroundColor;
-		EColor _defaultBackgroundColor = EColor.White;
-
+		EColor _defaultBackgroundColor = ThemeConstants.Shell.ColorClass.DefaultNavigationViewBackgroundColor;
 		List<Group> _groups;
 		IDictionary<Item, Element> _flyoutMenu = new Dictionary<Item, Element>();
 
 		public NavigationView(EvasObject parent) : base(parent)
 		{
 			Initialize(parent);
-			LayoutUpdated += (s, e) =>
+			_box.LayoutUpdated += (s, e) =>
 			{
 				UpdateChildGeometry();
 			};
@@ -39,10 +44,58 @@ namespace Xamarin.Forms.Platform.Tizen
 			set
 			{
 				_backgroundColor = value;
-
 				EColor effectiveColor = _backgroundColor.IsDefault ? _defaultBackgroundColor : _backgroundColor;
-				_menu.BackgroundColor = effectiveColor;
 				base.BackgroundColor = effectiveColor;
+
+				if(_bg == null)
+				{
+					_menu.BackgroundColor = effectiveColor;
+				}
+			}
+		}
+
+		public Aspect BackgroundImageAspect
+		{
+			get
+			{
+				return _bgImageAspect;
+			}
+			set
+			{
+				_bgImageAspect = value;
+				if (_bg != null)
+				{
+					_bg.ApplyAspect(_bgImageAspect);
+				}
+			}
+		}
+
+		public ImageSource BackgroundImageSource
+		{
+			get
+			{
+				return _bgImageSource;
+			}
+			set
+			{
+				_bgImageSource = value;
+				if (_bgImageSource != null)
+				{
+					if (_bg == null)
+					{
+						_bg = new EImage(this);
+					}
+					_menu.BackgroundColor = EColor.Transparent;
+					this.SetBackgroundPart(_bg);
+					_bg.ApplyAspect(_bgImageAspect);
+					_ = _bg.LoadFromImageSourceAsync(_bgImageSource);
+				}
+				else
+				{
+					EColor effectiveColor = _backgroundColor.IsDefault ? _defaultBackgroundColor : _backgroundColor;
+					_menu.BackgroundColor = effectiveColor;
+					this.SetBackgroundPart(null);
+				}
 			}
 		}
 
@@ -56,14 +109,14 @@ namespace Xamarin.Forms.Platform.Tizen
 			{
 				if (_header != null)
 				{
-					UnPack(_header);
+					_box.UnPack(_header);
 					_header.Hide();
 				}
 				_header = value;
 
 				if (_header != null)
 				{
-					PackStart(_header);
+					_box.PackStart(_header);
 					if (!_header.IsVisible)
 					{
 						_header.Show();
@@ -118,11 +171,19 @@ namespace Xamarin.Forms.Platform.Tizen
 
 		void Initialize(EvasObject parent)
 		{
+			_box = new Native.Box(parent)
+			{
+				AlignmentX = -1,
+				AlignmentY = -1,
+				WeightX = 1,
+				WeightY = 1
+			};
+			SetContent(_box);
+
 			_menu = new GenList(parent)
 			{
 				BackgroundColor = EColor.Transparent,
-				Style = "solid/default",
-			};
+			}.SetSolidStyle();
 
 			_menu.ItemSelected += (s, e) =>
 			{
@@ -132,13 +193,13 @@ namespace Xamarin.Forms.Platform.Tizen
 			};
 
 			_menu.Show();
-			PackEnd(_menu);
+			_box.PackEnd(_menu);
 
-			_defaultClass = new GenItemClass("double_label")
+			_defaultClass = new GenItemClass(ThemeConstants.GenItemClass.Styles.DoubleLabel)
 			{
 				GetTextHandler = (obj, part) =>
 				{
-					if (part == "elm.text")
+					if (part == ThemeConstants.GenItemClass.Parts.Text)
 					{
 						return ((Item)obj).Title;
 					}
@@ -149,7 +210,7 @@ namespace Xamarin.Forms.Platform.Tizen
 				},
 				GetContentHandler = (obj, part) =>
 				{
-					if (part == "elm.swallow.icon")
+					if (part == ThemeConstants.GenItemClass.Parts.Icon)
 					{
 						var icon = ((Item)obj).Icon;
 						if (icon != null)
@@ -188,10 +249,11 @@ namespace Xamarin.Forms.Platform.Tizen
 						var item = _menu.Append(_defaultClass, _groups[i].Items[j]);
 						if (j != 0)
 						{
-							item.SetPartColor("bottomline", EColor.Transparent);
+
+							item.SetBottomlineColor(EColor.Transparent);
 						}
 
-						item.SetPartColor("bg", EColor.Transparent);
+						item.SetBackgroundColor(EColor.Transparent);
 					}
 				}
 			}
@@ -203,9 +265,9 @@ namespace Xamarin.Forms.Platform.Tizen
 			if (_header != null)
 			{
 				headerHeight = _header.MinimumHeight;
-				_header.Geometry = new Rect(Geometry.X, Geometry.Y, Geometry.Width, headerHeight);
+				_header.Geometry = new ERect(Geometry.X, Geometry.Y, Geometry.Width, headerHeight);
 			}
-			_menu.Geometry = new Rect(Geometry.X, Geometry.Y + headerHeight, Geometry.Width, Geometry.Height - headerHeight);
+			_menu.Geometry = new ERect(Geometry.X, Geometry.Y + headerHeight, Geometry.Width, Geometry.Height - headerHeight);
 		}
 	}
 

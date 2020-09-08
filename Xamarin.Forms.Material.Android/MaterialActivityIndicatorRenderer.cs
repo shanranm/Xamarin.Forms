@@ -1,17 +1,13 @@
-#if __ANDROID_28__
 using System;
 using System.ComponentModel;
 using Android.Content;
-using Android.Support.V4.View;
+using AndroidX.Core.View;
 using Android.Views;
 using Android.Widget;
-using Xamarin.Forms;
 using Xamarin.Forms.Platform.Android.FastRenderers;
-using Xamarin.Forms.Material.Android;
+using Xamarin.Forms.Platform.Android;
 using AProgressBar = Android.Widget.ProgressBar;
 using AView = Android.Views.View;
-using Xamarin.Forms.Platform.Android;
-
 
 namespace Xamarin.Forms.Material.Android
 {
@@ -121,7 +117,7 @@ namespace Xamarin.Forms.Material.Android
 				e.NewElement.PropertyChanged += OnElementPropertyChanged;
 
 				UpdateColor();
-				UpdateBackgroundColor();
+				UpdateBackground();
 				UpdateIsRunning();
 
 				ElevationHelper.SetElevation(this, e.NewElement);
@@ -136,8 +132,8 @@ namespace Xamarin.Forms.Material.Android
 				UpdateIsRunning();
 			else if (e.Is(ActivityIndicator.ColorProperty))
 				UpdateColor();
-			else if (e.Is(VisualElement.BackgroundColorProperty))
-				UpdateBackgroundColor();
+			else if (e.IsOneOf(VisualElement.BackgroundColorProperty, VisualElement.BackgroundProperty))
+				UpdateBackground();
 		}
 
 		void UpdateIsRunning()
@@ -152,10 +148,10 @@ namespace Xamarin.Forms.Material.Android
 				_control.SetColor(Element.Color);
 		}
 
-		void UpdateBackgroundColor()
+		void UpdateBackground()
 		{
 			if (Element != null && _control != null)
-				_control.SetBackgroundColor(Element.BackgroundColor);
+				_control.SetBackground(Element.BackgroundColor, Element.Background);
 		}
 
 		// IVisualElementRenderer
@@ -193,4 +189,3 @@ namespace Xamarin.Forms.Material.Android
 		AView ITabStop.TabStop => _control;
 	}
 }
-#endif

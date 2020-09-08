@@ -1,6 +1,6 @@
 ﻿using Android.Content;
-using Android.Support.V4.Widget;
-using Android.Support.V7.Widget;
+using AndroidX.DrawerLayout.Widget;
+using AndroidX.AppCompat.Widget;
 
 namespace Xamarin.Forms.Platform.Android
 {
